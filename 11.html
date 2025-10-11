@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>可拖动旋转长方形交叠活动</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+        }
+
+        .container {
+            width: 100%;
+            height: 600px;
+            position: relative;
+            background-color: white;
+            border: 2px solid #ccc;
+            border-radius: 10px;
+            overflow: hidden;
+            cursor: default;
+        }
+
+        .rectangle {
+            position: absolute;
+            cursor: move;
+            border: 2px solid #333;
+            /* 移除圆角，使用直角 */
+            border-radius: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            user-select: none;
+            transition: transform 1s ease;
+        }
+
+        .rectangle-yellow {
+            width: 300px;
+            height: 80px;
+            background-color: rgba(255, 255, 0, 0.6); /* 黄色透明 */
+            border-color: #ffcc00;
+        }
+
+        .rectangle-blue {
+            width: 300px;
+            height: 150px;
+            background-color: rgba(0, 100, 255, 0.6); /* 蓝色透明 */
+            border-color: #0066cc;
+        }
+
+        .instructions {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #666;
+        }
+
+        .toolbar {
+            text-align: center;
+            margin-bottom: 15px;
+            padding: 10px;
+            background-color: #e8e8e8;
+            border-radius: 8px;
+        }
+
+        .tool-btn {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 0 5px;
+            font-size: 14px;
+        }
+
+        .tool-btn:hover {
+            background-color: #45a049;
+        }
+
+        .tool-btn:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+
+        .add-btn {
+            background-color: #2196F3;
+            color: white;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 0 5px;
+            font-size: 12px;
+        }
+
+        .add-btn:hover {
+            background-color: #1976D2;
+        }
+
+        .rotate-btn {
+            background-color: #FF9800;
+            color: white;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 0 3px;
+            font-size: 12px;
+        }
+
+        .rotate-btn:hover {
+            background-color: #F57C00;
+        }
+
+        .info {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            max-width: 300px;
+        }
+
+        .selected {
+            box-shadow: 0 0 15px 3px #ff6600;
+            border-color: #ff6600;
+        }
+
+        .rectangle-counter {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 12px;
+        }
+
+        .rotation-controls {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="instructions">
+        <h2>可拖动旋转长方形交叠活动</h2>
+        <p>添加长方形进行交叠实验，探索相同宽度和不同宽度的交叠</p>
+    </div>
+
+    <div class="toolbar">
+        <button class="add-btn" id="addYellowBtn">➕ 添加黄色长方形(80px高)</button>
+        <button class="add-btn" id="addBlueBtn">➕ 添加蓝色长方形(150px高)</button>
+        <button class="rotate-btn" id="rotateLeftBtn">↺ 左转15°</button>
+        <button class="rotate-btn" id="rotateRightBtn">↻ 右转15°</button>
+        <button class="tool-btn" id="resetBtn">🔄 重置</button>
+    </div>
+
+    <div class="container" id="container">
+        <div class="rectangle-counter" id="counter">
+            黄色: 0<br>
+            蓝色: 0
+        </div>
+        <div class="rotation-controls" id="rotationControls">
+            <div>当前选中长方形旋转角度:</div>
+            <div id="currentRotation">0°</div>
+        </div>
+        <div class="info">
+            操作说明：<br>
+            1. 点击"+"按钮添加长方形<br>
+            2. 拖动长方形改变位置<br>
+            3. 点击长方形选择它<br>
+            4. 使用旋转按钮调整角度<br>
+            5. 观察不同高度的交叠效果
+        </div>
+    </div>
+
+    <script>
+        class RectangleInteractive {
+            constructor() {
+                this.container = document.getElementById('container');
+                this.addYellowBtn = document.getElementById('addYellowBtn');
+                this.addBlueBtn = document.getElementById('addBlueBtn');
+                this.rotateLeftBtn = document.getElementById('rotateLeftBtn');
+                this.rotateRightBtn = document.getElementById('rotateRightBtn');
+                this.resetBtn = document.getElementById('resetBtn');
+                this.counter = document.getElementById('counter');
+                this.rotationControls = document.getElementById('rotationControls');
+                this.currentRotation = document.getElementById('currentRotation');
+                
+                this.rectangles = [];
+                this.rectangleCount = { yellow: 0, blue: 0 };
+                
+                this.isDragging = false;
+                this.currentRect = null;
+                this.offset = { x: 0, y: 0 };
+
+                this.init();
+            }
+
+            init() {
+                this.setupEventListeners();
+                this.updateCounter();
+                this.updateRotationControls();
+            }
+
+            setupEventListeners() {
+                // 添加长方形按钮事件
+                this.addYellowBtn.addEventListener('click', () => this.addRectangle('yellow'));
+                this.addBlueBtn.addEventListener('click', () => this.addRectangle('blue'));
+
+                // 旋转按钮事件
+                this.rotateLeftBtn.addEventListener('click', () => this.rotateSelected(-15));
+                this.rotateRightBtn.addEventListener('click', () => this.rotateSelected(15));
+                
+                // 重置按钮事件
+                this.resetBtn.addEventListener('click', () => this.resetAll());
+
+                // 容器点击取消选择
+                this.container.addEventListener('click', (e) => {
+                    if (e.target === this.container) {
+                        this.deselectAll();
+                    }
+                });
+
+                document.addEventListener('mousemove', (e) => this.handleMouseMove(e));
+                document.addEventListener('mouseup', () => this.handleMouseUp());
+
+                // 触摸事件支持
+                document.addEventListener('touchmove', (e) => this.handleTouchMove(e));
+                document.addEventListener('touchend', () => this.handleMouseUp());
+            }
+
+            addRectangle(color) {
+                const rect = document.createElement('div');
+                rect.className = 'rectangle rectangle-' + color;
+                
+                // 设置随机初始位置
+                const x = 50 + Math.random() * 200;
+                const y = 50 + Math.random() * 300;
+                
+                rect.style.left = x + 'px';
+                rect.style.top = y + 'px';
+                
+                const rectData = {
+                    element: rect,
+                    color: color,
+                    rotation: 0,
+                    isSelected: false,
+                    id: Date.now() + Math.random()
+                };
+                
+                this.rectangles.push(rectData);
+                this.rectangleCount[color]++;
+                
+                // 添加事件监听器
+                rect.addEventListener('mousedown', (e) => this.startDrag(e, rect));
+                rect.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    this.selectRectangle(rectData.id);
+                });
+                
+                rect.addEventListener('touchstart', (e) => {
+                    e.stopPropagation();
+                    this.startTouchDrag(e, rect);
+                });
+                
+                rect.addEventListener('touchend', (e) => {
+                    e.stopPropagation();
+                    this.selectRectangle(rectData.id);
+                });
+                
+                this.container.appendChild(rect);
+                this.updateCounter();
+                this.updateRotationControls();
+            }
+
+            handleMouseMove(event) {
+                if (this.isDragging) {
+                    this.dragRectangle(event);
+                }
+            }
+
+            handleTouchMove(event) {
+                if (event.touches.length > 0) {
+                    const touch = event.touches[0];
+                    event.clientX = touch.clientX;
+                    event.clientY = touch.clientY;
+                    this.handleMouseMove(event);
+                }
+            }
+
+            handleMouseUp() {
+                this.isDragging = false;
+                this.currentRect = null;
+                this.offset = { x: 0, y: 0 };
+            }
+
+            startDrag(event, rect) {
+                event.preventDefault();
+                event.stopPropagation();
+                this.isDragging = true;
+                
+                // 找到对应的矩形数据
+                this.currentRect = this.rectangles.find(r => r.element === rect);
+                
+                const containerBounds = this.container.getBoundingClientRect();
+                this.offset.x = event.clientX - containerBounds.left - parseInt(rect.style.left || 0);
+                this.offset.y = event.clientY - containerBounds.top - parseInt(rect.style.top || 0);
+            }
+
+            startTouchDrag(event, rect) {
+                event.preventDefault();
+                event.stopPropagation();
+                const touch = event.touches[0];
+                const containerBounds = this.container.getBoundingClientRect();
+                this.isDragging = true;
+                
+                // 找到对应的矩形数据
+                this.currentRect = this.rectangles.find(r => r.element === rect);
+                
+                this.offset.x = touch.clientX - containerBounds.left - parseInt(rect.style.left || 0);
+                this.offset.y = touch.clientY - containerBounds.top - parseInt(rect.style.top || 0);
+            }
+
+            dragRectangle(event) {
+                if (!this.currentRect) return;
+                
+                const containerBounds = this.container.getBoundingClientRect();
+                const x = event.clientX - containerBounds.left - this.offset.x;
+                const y = event.clientY - containerBounds.top - this.offset.y;
+                
+                // 限制在容器内
+                const maxX = containerBounds.width - this.currentRect.element.offsetWidth;
+                const maxY = containerBounds.height - this.currentRect.element.offsetHeight;
+                
+                const boundedX = Math.max(0, Math.min(x, maxX));
+                const boundedY = Math.max(0, Math.min(y, maxY));
+                
+                this.currentRect.element.style.left = boundedX + 'px';
+                this.currentRect.element.style.top = boundedY + 'px';
+            }
+
+            selectRectangle(rectId) {
+                // 取消所有选择
+                this.deselectAll();
+                
+                // 选择当前矩形
+                const rect = this.rectangles.find(r => r.id === rectId);
+                if (rect) {
+                    rect.isSelected = true;
+                    rect.element.classList.add('selected');
+                    this.updateRotationControls();
+                }
+            }
+
+            deselectAll() {
+                this.rectangles.forEach(rect => {
+                    rect.isSelected = false;
+                    rect.element.classList.remove('selected');
+                });
+                this.updateRotationControls();
+            }
+
+            rotateSelected(degrees) {
+                const selectedRect = this.rectangles.find(r => r.isSelected);
+                if (selectedRect) {
+                    selectedRect.rotation += degrees;
+                    
+                    // 标准化角度到0-360度范围
+                    if (selectedRect.rotation >= 360) selectedRect.rotation -= 360;
+                    if (selectedRect.rotation < 0) selectedRect.rotation += 360;
+                    
+                    selectedRect.element.style.transform = `rotate(${selectedRect.rotation}deg)`;
+                    selectedRect.element.style.transformOrigin = 'center center';
+                    
+                    this.updateRotationControls();
+                }
+            }
+
+            resetAll() {
+                // 删除所有长方形
+                this.rectangles.forEach(rect => {
+                    rect.element.remove();
+                });
+                this.rectangles = [];
+                this.rectangleCount = { yellow: 0, blue: 0 };
+                
+                // 重置选择状态
+                this.deselectAll();
+                
+                this.updateCounter();
+                this.updateRotationControls();
+            }
+
+            updateCounter() {
+                this.counter.innerHTML = `黄色: ${this.rectangleCount.yellow}<br>蓝色: ${this.rectangleCount.blue}`;
+            }
+
+            updateRotationControls() {
+                const selectedRect = this.rectangles.find(r => r.isSelected);
+                if (selectedRect) {
+                    this.rotationControls.style.display = 'block';
+                    this.currentRotation.textContent = selectedRect.rotation + '°';
+                    this.rotateLeftBtn.disabled = false;
+                    this.rotateRightBtn.disabled = false;
+                } else {
+                    this.rotationControls.style.display = 'none';
+                    this.rotateLeftBtn.disabled = true;
+                    this.rotateRightBtn.disabled = true;
+                }
+            }
+        }
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            new RectangleInteractive();
+        });
+    </script>
+</body>
+</html>
