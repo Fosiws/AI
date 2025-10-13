@@ -5,6 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>智慧课堂互动系统</title>
+    <!-- 在head标签中添加 -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * {
             margin: 0;
@@ -712,7 +714,48 @@
 
         // 创建Supabase客户端
         const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    // 用户登录
+    async function login(email, password) {
+        const { user, error } = await supabase.auth.signIn({
+            email: email,
+            password: password
+        });
 
+        if (error) {
+            console.error('登录失败:', error);
+            return null;
+        }
+
+        return user;
+    }
+
+    // 用户注册
+    async function register(email, password, realName, role) {
+        const { user, error } = await supabase.auth.signUp({
+            email: email,
+            password: password
+        });
+
+        if (error) {
+            console.error('注册失败:', error);
+            return null;
+        }
+
+        // 在users表中创建用户记录
+        const { data, error: profileError } = await supabase
+            .from('users')
+            .insert([
+                {
+                    id: user.id,
+                    username: email,
+                    real_name: realName,
+                    role: role,
+                    points: 0
+                }
+            ]);
+
+        return user;
+    }
         // 在<head>标签中添加Supabase库引用
         // <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
         // 全局变量
