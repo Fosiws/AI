@@ -1,0 +1,957 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>探索平行四边形</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Arial', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-sizing: border-box;
+        }
+
+        .page-container {
+            max-width: 1400px;
+            max-height: 90vh;
+            width: 95%;
+            height: 85vh;
+            display: flex;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            overflow: hidden;
+        }
+
+        .controls-panel {
+            width: 320px;
+            min-width: 300px;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            padding: 18px;
+            box-sizing: border-box;
+            border-right: 1px solid rgba(255, 255, 255, 0.2);
+            overflow-y: auto;
+            color: white;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .controls-panel h3 {
+            margin-top: 0;
+            margin-bottom: 15px;
+            color: #ffffff;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            font-size: 16px;
+            text-align: center;
+        }
+
+        .tool-section {
+            margin-bottom: 18px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            flex-shrink: 0;
+        }
+
+        .tool-section h4 {
+            margin: 0 0 10px 0;
+            color: #ffffff;
+            font-size: 13px;
+            font-weight: bold;
+        }
+
+        .tool-button {
+            display: block;
+            width: 100%;
+            padding: 10px 15px;
+            margin-bottom: 10px;
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            color: white;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .tool-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .tool-button.active {
+            background: rgba(100, 200, 255, 0.4);
+            border-color: rgba(100, 200, 255, 0.6);
+            box-shadow: 0 2px 8px rgba(100, 200, 255, 0.3);
+        }
+        
+        .tool-button.active:hover {
+            background: rgba(100, 200, 255, 0.5);
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 15px;
+            box-sizing: border-box;
+            min-width: 0;
+            overflow: hidden;
+        }
+
+        .container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 0;
+            width: 100%;
+            height: 100%;
+            background: transparent;
+            padding: 30px;
+        }
+
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 20px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        canvas {
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 15px;
+            background: rgba(255, 255, 255, 0.9);
+            cursor: grab;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        canvas:active {
+            cursor: grabbing;
+        }
+
+        .controls {
+            margin-top: 20px;
+            text-align: center;
+            color: white;
+        }
+
+        .info {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .color-info {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 10px;
+        }
+
+        .color-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .color-box {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+        }
+
+        /* 平板横屏优化 */
+        @media screen and (min-width: 768px) and (max-width: 1024px) and (orientation: landscape) {
+            .page-container {
+                max-width: 95vw;
+                height: 90vh;
+                max-height: 90vh;
+            }
+            
+            .controls-panel {
+                width: 280px;
+                min-width: 260px;
+                padding: 15px;
+            }
+            
+            .tool-section {
+                margin-bottom: 15px;
+                padding: 10px;
+            }
+            
+            canvas {
+                max-width: calc(100vw - 320px);
+                max-height: calc(90vh - 100px);
+            }
+        }
+
+        /* 小屏幕设备优化 */
+        @media screen and (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            
+            .page-container {
+                flex-direction: column;
+                height: auto;
+                max-height: none;
+            }
+            
+            .controls-panel {
+                width: 100%;
+                min-width: auto;
+                padding: 15px;
+                border-right: none;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            }
+            
+            .main-content {
+                padding: 15px;
+            }
+            
+            canvas {
+                max-width: 100%;
+                max-height: 60vh;
+            }
+        }
+
+        /* 超大屏幕优化 */
+        @media screen and (min-width: 1400px) {
+            .page-container {
+                max-width: 1600px;
+            }
+            
+            .controls-panel {
+                width: 350px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="page-container">
+        <div class="controls-panel">
+            <h3>工具控制面板</h3>
+            
+            <div class="tool-section">
+                <h4>测量工具</h4>
+                <button class="tool-button" id="toggleRuler">📏 显示直尺</button>
+                <button class="tool-button" id="toggleProtractor">📐 显示量角器</button>
+            </div>
+            
+            <div class="tool-section">
+                <h4>矩形信息</h4>
+                <div class="color-info">
+                    <div class="color-item">
+                        <div class="color-box" style="background-color: #94c3e8;"></div>
+                        <span>矩形A (#94c3e8)</span>
+                    </div>
+                    <div class="color-item">
+                        <div class="color-box" style="background-color: #ffea76;"></div>
+                        <span>矩形B (#ffea76)</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="tool-section">
+                <h4>操作说明</h4>
+                <p style="font-size: 12px; line-height: 1.4; margin: 0;">
+                    • 拖拽矩形进行旋转<br>
+                    • 工具可以移动和旋转<br>
+                    • 点击工具按钮显示/隐藏
+                </p>
+            </div>
+        </div>
+        
+        <div class="main-content">
+            <div class="container">
+                <h1>探索平行四边形</h1>
+                <canvas id="canvas" width="800" height="500"></canvas>
+            </div>
+        </div>
+    </div></body>
+
+    <script>
+        class RotatingRectangles {
+            constructor(canvasId) {
+                this.canvas = document.getElementById(canvasId);
+                this.ctx = this.canvas.getContext('2d');
+                this.centerX = this.canvas.width / 2;
+                this.centerY = this.canvas.height / 2;
+                
+                // 矩形A和B的属性
+                this.rectA = {
+                    width: 300,
+                    height: 60,
+                    color: '#94c3e8',
+                    rotation: 0,
+                    alpha: 0.7
+                };
+                
+                this.rectB = {
+                    width: 270,
+                    height: 80,
+                    color: '#ffea76',
+                    rotation: Math.PI / 4, // 初始45度旋转
+                    alpha: 0.7
+                };
+                
+                this.isDragging = false;
+                this.dragTarget = null;
+                this.lastMouseAngle = 0;
+                
+                // 工具状态
+                this.showRuler = false;
+                this.showProtractor = false;
+                
+                // 直尺状态
+                this.rulerPosition = { x: 100, y: 100 };
+                this.rulerAngle = 0;
+                this.isDraggingRuler = false;
+                this.isRotatingRuler = false;
+                this.rulerDragStartOffset = { x: 0, y: 0 };
+                this.rulerRotationStartMouseAngle = 0;
+                this.initialRulerAngle = 0;
+                
+                // 量角器状态
+                this.protractorPosition = { x: 200, y: 150 };
+                this.protractorAngle = 0;
+                this.protractorRadius = 80;
+                this.isDraggingProtractor = false;
+                this.isRotatingProtractor = false;
+                this.protractorDragStart = { x: 0, y: 0 };
+                this.protractorRotationStartAngle = 0;
+                this.initialProtractorAngle = 0;
+                
+                // 比例尺信息（用于直尺刻度）
+                this.scaleInfo = {
+                    barScreenLength: 50,
+                    realDistanceKm: 5,
+                    get pixelsPerKm() { return this.barScreenLength / this.realDistanceKm; }
+                };
+                
+                this.setupEventListeners();
+                this.draw();
+            }
+            
+            setupEventListeners() {
+                this.canvas.addEventListener('mousedown', (e) => this.onMouseDown(e));
+                this.canvas.addEventListener('mousemove', (e) => this.onMouseMove(e));
+                this.canvas.addEventListener('mouseup', () => this.onMouseUp());
+                this.canvas.addEventListener('mouseleave', () => this.onMouseUp());
+                
+                // 触摸事件支持
+                this.canvas.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    const touch = e.touches[0];
+                    const mouseEvent = new MouseEvent('mousedown', {
+                        clientX: touch.clientX,
+                        clientY: touch.clientY
+                    });
+                    this.canvas.dispatchEvent(mouseEvent);
+                });
+                
+                this.canvas.addEventListener('touchmove', (e) => {
+                    e.preventDefault();
+                    const touch = e.touches[0];
+                    const mouseEvent = new MouseEvent('mousemove', {
+                        clientX: touch.clientX,
+                        clientY: touch.clientY
+                    });
+                    this.canvas.dispatchEvent(mouseEvent);
+                });
+                
+                this.canvas.addEventListener('touchend', (e) => {
+                    e.preventDefault();
+                    this.onMouseUp();
+                });
+            }
+            
+            getMousePos(e) {
+                const rect = this.canvas.getBoundingClientRect();
+                return {
+                    x: e.clientX - rect.left,
+                    y: e.clientY - rect.top
+                };
+            }
+            
+            getMouseAngle(mouseX, mouseY) {
+                return Math.atan2(mouseY - this.centerY, mouseX - this.centerX);
+            }
+            
+            isPointInRotatedRect(x, y, rect) {
+                // 将点转换到矩形的本地坐标系
+                const dx = x - this.centerX;
+                const dy = y - this.centerY;
+                
+                // 反向旋转
+                const cos = Math.cos(-rect.rotation);
+                const sin = Math.sin(-rect.rotation);
+                const localX = dx * cos - dy * sin;
+                const localY = dx * sin + dy * cos;
+                
+                // 检查是否在矩形范围内
+                return Math.abs(localX) <= rect.width / 2 && Math.abs(localY) <= rect.height / 2;
+            }
+            
+            onMouseDown(e) {
+                const mousePos = this.getMousePos(e);
+                
+                // 优先检查工具交互
+                if (this.showRuler) {
+                    if (this.isMouseOnRulerHandle(mousePos.x, mousePos.y)) {
+                        this.isRotatingRuler = true;
+                        this.rulerRotationStartMouseAngle = Math.atan2(mousePos.y - this.rulerPosition.y, mousePos.x - this.rulerPosition.x);
+                        this.initialRulerAngle = this.rulerAngle;
+                        return;
+                    } else if (this.isMouseOnRuler(mousePos.x, mousePos.y)) {
+                        this.isDraggingRuler = true;
+                        this.rulerDragStartOffset.x = mousePos.x - this.rulerPosition.x;
+                        this.rulerDragStartOffset.y = mousePos.y - this.rulerPosition.y;
+                        return;
+                    }
+                }
+                
+                if (this.showProtractor) {
+                    if (this.isMouseOnProtractorHandle(mousePos.x, mousePos.y)) {
+                        this.isRotatingProtractor = true;
+                        this.protractorRotationStartAngle = Math.atan2(mousePos.y - this.protractorPosition.y, mousePos.x - this.protractorPosition.x);
+                        this.initialProtractorAngle = this.protractorAngle;
+                        return;
+                    } else if (this.isMouseOnProtractor(mousePos.x, mousePos.y)) {
+                        this.isDraggingProtractor = true;
+                        this.protractorDragStart.x = mousePos.x - this.protractorPosition.x;
+                        this.protractorDragStart.y = mousePos.y - this.protractorPosition.y;
+                        return;
+                    }
+                }
+                
+                // 检查点击的是哪个矩形（优先检查B，因为它在上层）
+                if (this.isPointInRotatedRect(mousePos.x, mousePos.y, this.rectB)) {
+                    this.dragTarget = this.rectB;
+                } else if (this.isPointInRotatedRect(mousePos.x, mousePos.y, this.rectA)) {
+                    this.dragTarget = this.rectA;
+                }
+                
+                if (this.dragTarget) {
+                    this.isDragging = true;
+                    this.lastMouseAngle = this.getMouseAngle(mousePos.x, mousePos.y);
+                    this.canvas.style.cursor = 'grabbing';
+                }
+            }
+            
+            onMouseMove(e) {
+                const mousePos = this.getMousePos(e);
+                
+                // 处理直尺交互
+                if (this.isDraggingRuler) {
+                    this.rulerPosition.x = mousePos.x - this.rulerDragStartOffset.x;
+                    this.rulerPosition.y = mousePos.y - this.rulerDragStartOffset.y;
+                    this.draw();
+                    return;
+                } else if (this.isRotatingRuler) {
+                    const currentMouseAngle = Math.atan2(mousePos.y - this.rulerPosition.y, mousePos.x - this.rulerPosition.x);
+                    const angleDelta = currentMouseAngle - this.rulerRotationStartMouseAngle;
+                    this.rulerAngle = this.initialRulerAngle + angleDelta;
+                    this.draw();
+                    return;
+                }
+                
+                // 处理量角器交互
+                if (this.isDraggingProtractor) {
+                    this.protractorPosition.x = mousePos.x - this.protractorDragStart.x;
+                    this.protractorPosition.y = mousePos.y - this.protractorDragStart.y;
+                    this.draw();
+                    return;
+                } else if (this.isRotatingProtractor) {
+                    const currentMouseAngle = Math.atan2(mousePos.y - this.protractorPosition.y, mousePos.x - this.protractorPosition.x);
+                    const angleDelta = currentMouseAngle - this.protractorRotationStartAngle;
+                    this.protractorAngle = this.initialProtractorAngle + angleDelta;
+                    this.draw();
+                    return;
+                }
+                
+                if (this.isDragging && this.dragTarget) {
+                    const currentAngle = this.getMouseAngle(mousePos.x, mousePos.y);
+                    const deltaAngle = currentAngle - this.lastMouseAngle;
+                    
+                    this.dragTarget.rotation += deltaAngle;
+                    this.lastMouseAngle = currentAngle;
+                    
+                    this.draw();
+                } else {
+                    // 更新鼠标样式
+                    let cursorStyle = 'default';
+                    
+                    if (this.showRuler) {
+                        if (this.isMouseOnRulerHandle(mousePos.x, mousePos.y)) {
+                            cursorStyle = 'pointer';
+                        } else if (this.isMouseOnRuler(mousePos.x, mousePos.y)) {
+                            cursorStyle = 'move';
+                        }
+                    }
+                    
+                    if (cursorStyle === 'default' && this.showProtractor) {
+                        if (this.isMouseOnProtractorHandle(mousePos.x, mousePos.y)) {
+                            cursorStyle = 'pointer';
+                        } else if (this.isMouseOnProtractor(mousePos.x, mousePos.y)) {
+                            cursorStyle = 'move';
+                        }
+                    }
+                    
+                    if (cursorStyle === 'default') {
+                        if (this.isPointInRotatedRect(mousePos.x, mousePos.y, this.rectA) ||
+                            this.isPointInRotatedRect(mousePos.x, mousePos.y, this.rectB)) {
+                            cursorStyle = 'grab';
+                        }
+                    }
+                    
+                    this.canvas.style.cursor = cursorStyle;
+                }
+            }
+            
+            onMouseUp() {
+                this.isDragging = false;
+                this.dragTarget = null;
+                this.isDraggingRuler = false;
+                this.isRotatingRuler = false;
+                this.isDraggingProtractor = false;
+                this.isRotatingProtractor = false;
+                this.canvas.style.cursor = 'default';
+            }
+            
+            drawRotatedRect(rect, useBlending = false) {
+                this.ctx.save();
+                
+                // 移动到中心点
+                this.ctx.translate(this.centerX, this.centerY);
+                
+                // 旋转
+                this.ctx.rotate(rect.rotation);
+                
+                // 设置混合模式
+                if (useBlending) {
+                    this.ctx.globalCompositeOperation = 'multiply';
+                    this.ctx.globalAlpha = rect.alpha * 0.8; // 稍微降低透明度以增强混合效果
+                } else {
+                    this.ctx.globalCompositeOperation = 'source-over';
+                    this.ctx.globalAlpha = rect.alpha;
+                }
+                
+                this.ctx.fillStyle = rect.color;
+                
+                // 绘制矩形（中心对齐）
+                this.ctx.fillRect(-rect.width / 2, -rect.height / 2, rect.width, rect.height);
+                
+                // 添加边框
+                this.ctx.globalCompositeOperation = 'source-over';
+                this.ctx.globalAlpha = rect.alpha + 0.2;
+                this.ctx.strokeStyle = rect.color;
+                this.ctx.lineWidth = 2;
+                this.ctx.strokeRect(-rect.width / 2, -rect.height / 2, rect.width, rect.height);
+                
+                this.ctx.restore();
+            }
+            
+            drawCenterPoint() {
+                this.ctx.save();
+                this.ctx.fillStyle = '#333';
+                this.ctx.beginPath();
+                this.ctx.arc(this.centerX, this.centerY, 4, 0, 2 * Math.PI);
+                this.ctx.fill();
+                
+                // 添加白色边框
+                this.ctx.strokeStyle = 'white';
+                this.ctx.lineWidth = 2;
+                this.ctx.stroke();
+                this.ctx.restore();
+            }
+            
+            // 物理颜色混合算法
+            physicalColorMix() {
+                // 创建临时画布用于高级混合
+                const tempCanvas = document.createElement('canvas');
+                tempCanvas.width = this.canvas.width;
+                tempCanvas.height = this.canvas.height;
+                const tempCtx = tempCanvas.getContext('2d');
+                
+                // 在临时画布上绘制矩形A
+                tempCtx.save();
+                tempCtx.translate(this.centerX, this.centerY);
+                tempCtx.rotate(this.rectA.rotation);
+                tempCtx.globalAlpha = this.rectA.alpha;
+                tempCtx.fillStyle = this.rectA.color;
+                tempCtx.fillRect(-this.rectA.width / 2, -this.rectA.height / 2, this.rectA.width, this.rectA.height);
+                tempCtx.restore();
+                
+                // 使用multiply混合模式绘制矩形B
+                tempCtx.save();
+                tempCtx.translate(this.centerX, this.centerY);
+                tempCtx.rotate(this.rectB.rotation);
+                tempCtx.globalCompositeOperation = 'multiply';
+                tempCtx.globalAlpha = this.rectB.alpha;
+                tempCtx.fillStyle = this.rectB.color;
+                tempCtx.fillRect(-this.rectB.width / 2, -this.rectB.height / 2, this.rectB.width, this.rectB.height);
+                tempCtx.restore();
+                
+                // 将结果绘制到主画布
+                this.ctx.drawImage(tempCanvas, 0, 0);
+            }
+            
+            drawBorders() {
+                // 绘制矩形A边框
+                this.ctx.save();
+                this.ctx.translate(this.centerX, this.centerY);
+                this.ctx.rotate(this.rectA.rotation);
+                this.ctx.globalAlpha = 0.8;
+                this.ctx.strokeStyle = this.rectA.color;
+                this.ctx.lineWidth = 2;
+                this.ctx.strokeRect(-this.rectA.width / 2, -this.rectA.height / 2, this.rectA.width, this.rectA.height);
+                this.ctx.restore();
+                
+                // 绘制矩形B边框
+                this.ctx.save();
+                this.ctx.translate(this.centerX, this.centerY);
+                this.ctx.rotate(this.rectB.rotation);
+                this.ctx.globalAlpha = 0.8;
+                this.ctx.strokeStyle = this.rectB.color;
+                this.ctx.lineWidth = 2;
+                this.ctx.strokeRect(-this.rectB.width / 2, -this.rectB.height / 2, this.rectB.width, this.rectB.height);
+                this.ctx.restore();
+            }
+
+            // 直尺绘制函数
+            drawRuler() {
+                if (!this.showRuler) return;
+                
+                this.ctx.save();
+                
+                // 围绕0刻度（旋转中心）定位和旋转标尺
+                this.ctx.translate(this.rulerPosition.x, this.rulerPosition.y);
+                this.ctx.rotate(this.rulerAngle);
+                
+                const rulerWidth = 240;
+                const rulerHeight = 35;
+                
+                // 绘制标尺背景
+                this.ctx.fillStyle = 'rgba(255, 235, 150, 0.9)';
+                this.ctx.fillRect(0, 0, rulerWidth, rulerHeight);
+                this.ctx.strokeStyle = '#654321';
+                this.ctx.lineWidth = 1.5;
+                this.ctx.strokeRect(0, 0, rulerWidth, rulerHeight);
+                
+                // 绘制刻度
+                this.ctx.fillStyle = 'black';
+                this.ctx.font = '10px Arial';
+                this.ctx.textAlign = 'center';
+                
+                const unitPx = this.scaleInfo.pixelsPerKm;
+                for (let i = 0; (i * unitPx) <= rulerWidth; i++) {
+                    const currentPxPos = i * unitPx;
+                    const xPos = currentPxPos;
+                    
+                    let tickHeight;
+                    if (i % 10 === 0) tickHeight = 12; // 每10km
+                    else if (i % 5 === 0) tickHeight = 8; // 每5km
+                    else if (i % 1 === 0) tickHeight = 5; // 每1km
+                    else continue;
+                    
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(xPos, 0);
+                    this.ctx.lineTo(xPos, tickHeight);
+                    this.ctx.stroke();
+                    
+                    if (i % 5 === 0) {
+                        this.ctx.textBaseline = 'top';
+                        this.ctx.fillText(i.toString(), xPos, tickHeight + 2);
+                    }
+                }
+                
+                this.ctx.font = 'bold 10px Arial';
+                this.ctx.fillText("km", rulerWidth / 2, rulerHeight - 12);
+                
+                // 绘制旋转手柄
+                const handleRadius = 8;
+                const handleX = rulerWidth - handleRadius - 3;
+                const handleY = rulerHeight / 2;
+                this.ctx.beginPath();
+                this.ctx.arc(handleX, handleY, handleRadius, 0, 2 * Math.PI);
+                this.ctx.fillStyle = 'rgba(100, 100, 255, 0.7)';
+                this.ctx.fill();
+                this.ctx.strokeStyle = 'blue';
+                this.ctx.stroke();
+                
+                this.ctx.fillStyle = 'white';
+                this.ctx.font = 'bold 10px Arial';
+                this.ctx.textAlign = 'center';
+                this.ctx.textBaseline = 'middle';
+                this.ctx.save();
+                this.ctx.translate(handleX, handleY);
+                this.ctx.rotate(-this.rulerAngle); // 保持符号直立
+                this.ctx.fillText("↻", 0, 1);
+                this.ctx.restore();
+                
+                this.ctx.restore();
+            }
+            
+            // 将鼠标点转换为直尺的局部坐标
+            mouseToRulerLocal(mouseX, mouseY) {
+                let translatedX = mouseX - this.rulerPosition.x;
+                let translatedY = mouseY - this.rulerPosition.y;
+                
+                const angle = -this.rulerAngle;
+                const cos = Math.cos(angle);
+                const sin = Math.sin(angle);
+                
+                return {
+                    x: translatedX * cos - translatedY * sin,
+                    y: translatedX * sin + translatedY * cos
+                };
+            }
+            
+            // 检查鼠标是否在直尺旋转手柄上
+            isMouseOnRulerHandle(mouseX, mouseY) {
+                const local = this.mouseToRulerLocal(mouseX, mouseY);
+                const handleX = 240 - 8 - 3; // rulerWidth - handleRadius - 3
+                const handleY = 35 / 2; // rulerHeight / 2
+                const handleRadius = 8;
+                
+                const distance = Math.sqrt((local.x - handleX) ** 2 + (local.y - handleY) ** 2);
+                return distance <= handleRadius;
+            }
+            
+            // 检查鼠标是否在直尺主体上
+            isMouseOnRuler(mouseX, mouseY) {
+                const local = this.mouseToRulerLocal(mouseX, mouseY);
+                return local.x >= 0 && local.x <= 240 && local.y >= 0 && local.y <= 35;
+            }
+            
+            // 量角器绘制函数
+            drawProtractor() {
+                if (!this.showProtractor) return;
+                
+                this.ctx.save();
+                this.ctx.translate(this.protractorPosition.x, this.protractorPosition.y);
+                this.ctx.rotate(this.protractorAngle);
+                
+                const radius = this.protractorRadius;
+                
+                // 绘制半圆弧主体
+                this.ctx.beginPath();
+                this.ctx.arc(0, 0, radius, Math.PI, 0); // 180度到0度
+                this.ctx.fillStyle = 'rgba(245, 245, 220, 0.6)';
+                this.ctx.fill();
+                this.ctx.strokeStyle = 'black';
+                this.ctx.lineWidth = 1;
+                this.ctx.stroke();
+                
+                // 绘制基线
+                this.ctx.beginPath();
+                this.ctx.moveTo(-radius, 0);
+                this.ctx.lineTo(radius, 0);
+                this.ctx.stroke();
+                
+                // 绘制中心点
+                this.ctx.beginPath();
+                this.ctx.arc(0, 0, 3, 0, 2 * Math.PI);
+                this.ctx.fillStyle = 'black';
+                this.ctx.fill();
+                
+                // 绘制刻度和标签
+                this.ctx.strokeStyle = 'black';
+                this.ctx.fillStyle = 'black';
+                
+                for (let deg = 0; deg <= 180; deg++) {
+                    const angleRad = (180 - deg) * Math.PI / 180;
+                    
+                    let tickLength;
+                    const isMajorTick = (deg % 10 === 0);
+                    const isMediumTick = (deg % 5 === 0);
+                    
+                    if (isMajorTick) tickLength = 10;
+                    else if (isMediumTick) tickLength = 6;
+                    else tickLength = 3;
+                    
+                    const startX = radius * Math.cos(angleRad);
+                    const startY = -radius * Math.sin(angleRad);
+                    const endX = (radius - tickLength) * Math.cos(angleRad);
+                    const endY = -(radius - tickLength) * Math.sin(angleRad);
+                    
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(startX, startY);
+                    this.ctx.lineTo(endX, endY);
+                    this.ctx.stroke();
+                    
+                    if (isMajorTick) {
+                        const labelRadius = radius + 10;
+                        const textX = labelRadius * Math.cos(angleRad);
+                        const textY = -labelRadius * Math.sin(angleRad);
+                        
+                        this.ctx.save();
+                        this.ctx.translate(textX, textY);
+                        let textRotation = angleRad - Math.PI / 2;
+                        if (angleRad > Math.PI / 2) {
+                            textRotation += Math.PI;
+                        }
+                        this.ctx.rotate(textRotation);
+                        this.ctx.font = '8px Arial';
+                        this.ctx.textAlign = 'center';
+                        this.ctx.textBaseline = 'middle';
+                        this.ctx.fillText(deg.toString(), 0, 0);
+                        this.ctx.restore();
+                        
+                        // 内圈标签
+                        if (deg !== 90) {
+                            const innerDeg = 180 - deg;
+                            const labelRadiusInner = radius - tickLength - 8;
+                            const textXInner = labelRadiusInner * Math.cos(angleRad);
+                            const textYInner = -labelRadiusInner * Math.sin(angleRad);
+                            
+                            this.ctx.save();
+                            this.ctx.translate(textXInner, textYInner);
+                            this.ctx.rotate(textRotation);
+                            this.ctx.font = '6px Arial';
+                            this.ctx.textAlign = 'center';
+                            this.ctx.textBaseline = 'middle';
+                            this.ctx.fillText(innerDeg.toString(), 0, 0);
+                            this.ctx.restore();
+                        }
+                    }
+                }
+                
+                // 90度特殊标签
+                this.ctx.save();
+                this.ctx.translate(0, -radius - 10);
+                this.ctx.font = '8px Arial';
+                this.ctx.textAlign = 'center';
+                this.ctx.textBaseline = 'bottom';
+                this.ctx.fillText("90", 0, 0);
+                this.ctx.restore();
+                
+                // 绘制旋转手柄
+                const handleRadius = 6;
+                const handleX = radius;
+                const handleY = 0;
+                this.ctx.beginPath();
+                this.ctx.arc(handleX, handleY, handleRadius, 0, 2 * Math.PI);
+                this.ctx.fillStyle = 'rgba(100, 100, 255, 0.7)';
+                this.ctx.fill();
+                this.ctx.strokeStyle = 'blue';
+                this.ctx.stroke();
+                
+                this.ctx.fillStyle = 'white';
+                this.ctx.font = 'bold 8px Arial';
+                this.ctx.textAlign = 'center';
+                this.ctx.textBaseline = 'middle';
+                this.ctx.save();
+                this.ctx.translate(handleX, handleY);
+                this.ctx.rotate(-this.protractorAngle);
+                this.ctx.fillText("↻", 0, 1);
+                this.ctx.restore();
+                
+                this.ctx.restore();
+            }
+            
+            // 将鼠标点转换为量角器的局部坐标
+            mouseToProtractorLocal(mouseX, mouseY) {
+                let localX = mouseX - this.protractorPosition.x;
+                let localY = mouseY - this.protractorPosition.y;
+                
+                const angle = -this.protractorAngle;
+                const cos = Math.cos(angle);
+                const sin = Math.sin(angle);
+                
+                return {
+                    x: localX * cos - localY * sin,
+                    y: localX * sin + localY * cos
+                };
+            }
+            
+            // 检查鼠标是否在量角器旋转手柄上
+            isMouseOnProtractorHandle(mouseX, mouseY) {
+                const local = this.mouseToProtractorLocal(mouseX, mouseY);
+                const handleX = this.protractorRadius;
+                const handleY = 0;
+                const handleRadius = 6;
+                
+                const distance = Math.sqrt((local.x - handleX) ** 2 + (local.y - handleY) ** 2);
+                return distance <= handleRadius;
+            }
+            
+            // 检查鼠标是否在量角器主体上
+            isMouseOnProtractor(mouseX, mouseY) {
+                const local = this.mouseToProtractorLocal(mouseX, mouseY);
+                const distance = Math.sqrt(local.x ** 2 + local.y ** 2);
+                return distance <= this.protractorRadius && local.y <= 0; // 只有上半圆
+            }
+
+            draw() {
+                // 清空画布
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                
+                // 使用物理颜色混合
+                this.physicalColorMix();
+                
+                // 绘制工具
+                this.drawRuler();
+                this.drawProtractor();
+            }
+        }
+        
+        // 初始化应用
+        window.addEventListener('DOMContentLoaded', () => {
+            const rotatingRectangles = new RotatingRectangles('canvas');
+            
+            // 工具按钮事件处理
+            function toggleRuler() {
+                rotatingRectangles.showRuler = !rotatingRectangles.showRuler;
+                const button = document.getElementById('toggleRuler');
+                if (rotatingRectangles.showRuler) {
+                    button.classList.add('active');
+                    button.textContent = '📏 隐藏直尺';
+                } else {
+                    button.classList.remove('active');
+                    button.textContent = '📏 显示直尺';
+                }
+                rotatingRectangles.draw();
+            }
+            
+            function toggleProtractor() {
+                rotatingRectangles.showProtractor = !rotatingRectangles.showProtractor;
+                const button = document.getElementById('toggleProtractor');
+                if (rotatingRectangles.showProtractor) {
+                    button.classList.add('active');
+                    button.textContent = '📐 隐藏量角器';
+                } else {
+                    button.classList.remove('active');
+                    button.textContent = '📐 显示量角器';
+                }
+                rotatingRectangles.draw();
+            }
+            
+            // 绑定按钮事件
+            document.getElementById('toggleRuler').addEventListener('click', toggleRuler);
+            document.getElementById('toggleProtractor').addEventListener('click', toggleProtractor);
+        });
+    </script>
+</body>
+</html>

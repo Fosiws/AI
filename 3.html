@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>长方形与正方形特征复习</title>
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            padding: 30px;
+            width: 90%;
+            max-width: 900px;
+            margin-top: 20px;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2.2em;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin: 20px 0;
+            border: 3px solid #2c3e50;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        th, td {
+            border: 2px solid #2c3e50;
+            padding: 15px;
+            text-align: center;
+            font-size: 1.1em;
+        }
+        
+        th {
+            background-color: #3498db;
+            color: white;
+            font-weight: bold;
+            position: relative;
+        }
+        
+        th:first-child {
+            border-left: none;
+        }
+        
+        th:last-child {
+            border-right: none;
+        }
+        
+        .shape-cell {
+            background-color: #f0f8ff;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .feature-cell {
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background-color: #fff;
+            min-width: 100px;
+        }
+        
+        .feature-cell:hover {
+            background-color: #e1f5fe;
+            transform: scale(1.02);
+        }
+        
+        .feature-cell.selected {
+            background-color: #bbdefb;
+        }
+        
+        .check-mark, .cross-mark, .question-mark {
+            font-size: 2em;
+            cursor: pointer;
+            user-select: none;
+            display: inline-block;
+            width: 100%;
+        }
+        
+        .check-mark {
+            color: #27ae60;
+        }
+        
+        .cross-mark {
+            color: #e74c3c;
+        }
+        
+        .question-mark {
+            color: #7f8c8d;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 25px 0;
+        }
+        
+        button {
+            padding: 12px 25px;
+            font-size: 1.1em;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        
+        #check-btn {
+            background: linear-gradient(45deg, #4CAF50, #8BC34A);
+            color: white;
+        }
+        
+        #reset-btn {
+            background: linear-gradient(45deg, #f44336, #ff9800);
+            color: white;
+        }
+        
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+        }
+        
+        button:active {
+            transform: translateY(1px);
+        }
+        
+        .feedback {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 1.2em;
+            display: none;
+        }
+        
+        .correct {
+            background-color: #d4edda;
+            color: #155724;
+            border: 2px solid #c3e6cb;
+        }
+        
+        .incorrect {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 2px solid #f5c6cb;
+        }
+        
+        .explanation {
+            margin-top: 20px;
+            padding: 20px;
+            background-color: #e3f2fd;
+            border-radius: 10px;
+            display: none;
+            border: 2px solid #bbdefb;
+        }
+        
+        .explanation h3 {
+            margin-top: 0;
+            color: #0d47a1;
+        }
+        
+        .error-item {
+            margin: 15px 0;
+            padding: 15px;
+            background-color: #ffebee;
+            border-left: 5px solid #f44336;
+            border-radius: 5px;
+        }
+        
+        .error-title {
+            font-weight: bold;
+            color: #d32f2f;
+            margin-bottom: 10px;
+        }
+        
+        .shapes-container {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .shape-wrapper {
+            margin: 15px;
+            text-align: center;
+        }
+        
+        .shape {
+            width: 150px;
+            height: 150px;
+            position: relative;
+            transition: all 0.5s ease;
+            margin: 0 auto;
+        }
+        
+        .rectangle {
+            width: 180px;
+            height: 120px;
+            background: linear-gradient(45deg, #4a90e2, #63b3ed);
+            border: 3px solid #1e3a8a;
+            border-radius: 5px;
+        }
+        
+        .square {
+            width: 150px;
+            height: 150px;
+            background: linear-gradient(45deg, #3498db, #5dade2);
+            border: 3px solid #1f618d;
+            border-radius: 5px;
+        }
+        
+        .shape-label {
+            text-align: center;
+            font-weight: bold;
+            margin-top: 10px;
+            color: #333;
+            font-size: 1.1em;
+        }
+        
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            background-color: #f00;
+            opacity: 0;
+            z-index: 9999;
+        }
+        
+        @keyframes confetti-fall {
+            0% { transform: translateY(-100px) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+        }
+        
+        .highlight {
+            animation: highlight 1.5s ease;
+        }
+        
+        @keyframes highlight {
+            0% { background-color: #fff; }
+            50% { background-color: #ffeb3b; }
+            100% { background-color: #fff; }
+        }
+        
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 15px 0;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 3px;
+        }
+        
+        .legend-true { background-color: #d4edda; }
+        .legend-false { background-color: #f8d7da; }
+        .legend-unanswered { background-color: #f0f8ff; }
+        
+        .diagram-container {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+            flex-wrap: wrap;
+            gap: 30px;
+        }
+        
+        .diagram {
+            text-align: center;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .diagram-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #333;
+        }
+        
+        .diagram-img {
+            width: 180px;
+            height: 150px;
+            margin: 0 auto;
+            position: relative;
+        }
+        
+        .rect-diagram {
+            width: 160px;
+            height: 100px;
+            border: 3px solid #3498db;
+            margin: 25px auto;
+            position: relative;
+        }
+        
+        .square-diagram {
+            width: 120px;
+            height: 120px;
+            border: 3px solid #3498db;
+            margin: 15px auto;
+            position: relative;
+        }
+        
+        .side-label {
+            position: absolute;
+            font-size: 14px;
+            color: #e74c3c;
+            font-weight: bold;
+        }
+        
+        .top-label {
+            top: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        
+        .bottom-label {
+            bottom: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        
+        .left-label {
+            top: 50%;
+            left: -25px;
+            transform: translateY(-50%);
+        }
+        
+        .right-label {
+            top: 50%;
+            right: -25px;
+            transform: translateY(-50%);
+        }
+        
+        .angle-label {
+            position: absolute;
+            font-size: 14px;
+            color: #27ae60;
+            font-weight: bold;
+        }
+        
+        .angle-tl {
+            top: 5px;
+            left: 5px;
+        }
+        
+        .angle-tr {
+            top: 5px;
+            right: 5px;
+        }
+        
+        .angle-bl {
+            bottom: 5px;
+            left: 5px;
+        }
+        
+        .angle-br {
+            bottom: 5px;
+            right: 5px;
+        }
+        
+        .arrow {
+            position: absolute;
+            width: 0;
+            height: 0;
+        }
+        
+        .horizontal-arrow {
+            top: 50%;
+            transform: translateY(-50%);
+            border-top: 8px solid transparent;
+            border-bottom: 8px solid transparent;
+        }
+        
+        .right-arrow {
+            right: -20px;
+            border-left: 15px solid #e74c3c;
+        }
+        
+        .left-arrow {
+            left: -20px;
+            border-right: 15px solid #e74c3c;
+        }
+        
+        .vertical-arrow {
+            left: 50%;
+            transform: translateX(-50%);
+            border-left: 8px solid transparent;
+            border-right: 8px solid transparent;
+        }
+        
+        .down-arrow {
+            bottom: -20px;
+            border-top: 15px solid #e74c3c;
+        }
+        
+        .up-arrow {
+            top: -20px;
+            border-bottom: 15px solid #e74c3c;
+        }
+    </style>
+</head>
+<body>
+    <h1>长方形与正方形特征复习</h1>
+    <p class="subtitle">请在表格中选择正确的特征（点击单元格选择√或×）</p>
+    
+    <div class="container">
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color legend-true"></div>
+                <span>正确答案</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color legend-false"></div>
+                <span>错误答案</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color legend-unanswered"></div>
+                <span>未作答</span>
+            </div>
+        </div>
+        
+        <table id="feature-table">
+            <thead>
+                <tr>
+                    <th>图形</th>
+                    <th colspan="3">边的特征</th>
+                    <th colspan="2">角的特征</th>
+                </tr>
+                <tr>
+                    <th></th>
+                    <th>对边相等</th>
+                    <th>对边平行</th>
+                    <th>四边相等</th>
+                    <th>对角相等</th>
+                    <th>四角相等</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="shape-cell">长方形</td>
+                    <td class="feature-cell" data-shape="rectangle" data-feature="opposite-equal"></td>
+                    <td class="feature-cell" data-shape="rectangle" data-feature="opposite-parallel"></td>
+                    <td class="feature-cell" data-shape="rectangle" data-feature="all-equal"></td>
+                    <td class="feature-cell" data-shape="rectangle" data-feature="opposite-angle-equal"></td>
+                    <td class="feature-cell" data-shape="rectangle" data-feature="all-angle-equal"></td>
+                </tr>
+                <tr>
+                    <td class="shape-cell">正方形</td>
+                    <td class="feature-cell" data-shape="square" data-feature="opposite-equal"></td>
+                    <td class="feature-cell" data-shape="square" data-feature="opposite-parallel"></td>
+                    <td class="feature-cell" data-shape="square" data-feature="all-equal"></td>
+                    <td class="feature-cell" data-shape="square" data-feature="opposite-angle-equal"></td>
+                    <td class="feature-cell" data-shape="square" data-feature="all-angle-equal"></td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <div class="shapes-container">
+            <div class="shape-wrapper">
+                <div class="shape rectangle"></div>
+                <div class="shape-label">长方形</div>
+            </div>
+            <div class="shape-wrapper">
+                <div class="shape square"></div>
+                <div class="shape-label">正方形</div>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button id="check-btn">检查答案</button>
+            <button id="reset-btn">重置表格</button>
+        </div>
+        
+        <div id="feedback" class="feedback"></div>
+        <div id="explanation" class="explanation"></div>
+    </div>
+
+    <script>
+        // 正确答案
+        const correctAnswers = {
+            rectangle: {
+                'opposite-equal': true,
+                'opposite-parallel': true,
+                'all-equal': false,
+                'opposite-angle-equal': true,
+                'all-angle-equal': true
+            },
+            square: {
+                'opposite-equal': true,
+                'opposite-parallel': true,
+                'all-equal': true,
+                'opposite-angle-equal': true,
+                'all-angle-equal': true
+            }
+        };
+        
+        // 特征描述
+        const featureDescriptions = {
+            'opposite-equal': '对边相等',
+            'opposite-parallel': '对边平行',
+            'all-equal': '四边相等',
+            'opposite-angle-equal': '对角相等',
+            'all-angle-equal': '四角相等'
+        };
+        
+        // 图形中文名
+        const shapeNames = {
+            'rectangle': '长方形',
+            'square': '正方形'
+        };
+        
+        // 当前用户答案
+        let userAnswers = {
+            rectangle: {},
+            square: {}
+        };
+        
+        // 初始化表格
+        document.querySelectorAll('.feature-cell').forEach(cell => {
+            cell.innerHTML = '<div class="question-mark">?</div>';
+            cell.addEventListener('click', toggleCell);
+        });
+        
+        // 切换单元格状态
+        function toggleCell(event) {
+            const cell = event.currentTarget;
+            const shape = cell.dataset.shape;
+            const feature = cell.dataset.feature;
+            
+            // 获取当前状态
+            let currentMark = cell.querySelector('.check-mark, .cross-mark, .question-mark');
+            let currentState = null;
+            
+            if (currentMark) {
+                if (currentMark.classList.contains('check-mark')) {
+                    currentState = 'check';
+                } else if (currentMark.classList.contains('cross-mark')) {
+                    currentState = 'cross';
+                } else if (currentMark.classList.contains('question-mark')) {
+                    currentState = 'question';
+                }
+            }
+            
+            // 切换状态：? → √ → × → ?
+            if (!currentState || currentState === 'question') {
+                cell.innerHTML = '<div class="check-mark">√</div>';
+                userAnswers[shape][feature] = true;
+                cell.classList.add('selected');
+            } else if (currentState === 'check') {
+                cell.innerHTML = '<div class="cross-mark">×</div>';
+                userAnswers[shape][feature] = false;
+                cell.classList.add('selected');
+            } else {
+                cell.innerHTML = '<div class="question-mark">?</div>';
+                delete userAnswers[shape][feature];
+                cell.classList.remove('selected');
+            }
+        }
+        
+        // 检查答案
+        document.getElementById('check-btn').addEventListener('click', checkAnswers);
+        
+        function checkAnswers() {
+            const feedback = document.getElementById('feedback');
+            const explanation = document.getElementById('explanation');
+            
+            // 检查是否所有单元格都已填写
+            let allFilled = true;
+            for (const shape in correctAnswers) {
+                for (const feature in correctAnswers[shape]) {
+                    if (userAnswers[shape][feature] === undefined) {
+                        allFilled = false;
+                        break;
+                    }
+                }
+                if (!allFilled) break;
+            }
+            
+            if (!allFilled) {
+                feedback.className = 'feedback incorrect';
+                feedback.textContent = '请完成所有表格项后再检查！';
+                feedback.style.display = 'block';
+                explanation.style.display = 'none';
+                return;
+            }
+            
+            // 检查答案是否正确
+            let isCorrect = true;
+            let errors = [];
+            
+            for (const shape in correctAnswers) {
+                for (const feature in correctAnswers[shape]) {
+                    if (userAnswers[shape][feature] !== correctAnswers[shape][feature]) {
+                        isCorrect = false;
+                        errors.push({
+                            shape: shape,
+                            feature: feature,
+                            userAnswer: userAnswers[shape][feature],
+                            correctAnswer: correctAnswers[shape][feature]
+                        });
+                    }
+                }
+            }
+            
+            // 高亮显示正确/错误答案
+            highlightAnswers();
+            
+            if (isCorrect) {
+                feedback.className = 'feedback correct';
+                feedback.textContent = '恭喜你！答案完全正确！';
+                feedback.style.display = 'block';
+                explanation.style.display = 'none';
+                createConfetti();
+            } else {
+                feedback.className = 'feedback incorrect';
+                feedback.textContent = '答案有误，请查看下面的解释';
+                feedback.style.display = 'block';
+                showExplanation(errors);
+            }
+        }
+        
+        // 高亮显示答案
+        function highlightAnswers() {
+            document.querySelectorAll('.feature-cell').forEach(cell => {
+                const shape = cell.dataset.shape;
+                const feature = cell.dataset.feature;
+                
+                if (userAnswers[shape][feature] !== undefined) {
+                    if (userAnswers[shape][feature] === correctAnswers[shape][feature]) {
+                        cell.style.backgroundColor = '#d4edda'; // 绿色表示正确
+                    } else {
+                        cell.style.backgroundColor = '#f8d7da'; // 红色表示错误
+                    }
+                }
+            });
+        }
+        
+        // 显示解释（只显示错误项）
+        function showExplanation(errors) {
+            const explanation = document.getElementById('explanation');
+            let explanationHTML = '<h3>错误解答分析</h3>';
+            
+            errors.forEach(error => {
+                const shapeName = shapeNames[error.shape];
+                const featureDesc = featureDescriptions[error.feature];
+                const userAnswerText = error.userAnswer ? '√' : '×';
+                const correctAnswerText = error.correctAnswer ? '√' : '×';
+                
+                explanationHTML += `
+                    <div class="error-item">
+                        <div class="error-title">${shapeName} - ${featureDesc}</div>
+                        <p>你的答案：${userAnswerText} | 正确答案：${correctAnswerText}</p>
+                `;
+                
+                // 根据错误类型显示不同的解释和图示
+                if (error.shape === 'rectangle' && error.feature === 'all-equal') {
+                    explanationHTML += `
+                        <p><strong>解释：</strong>长方形只有对边相等，邻边长度不同，所以不是四边相等。</p>
+                        <div class="diagram-container">
+                            <div class="diagram">
+                                <div class="diagram-title">长方形示意图</div>
+                                <div class="diagram-img">
+                                    <div class="rect-diagram">
+                                        <div class="side-label top-label">长边</div>
+                                        <div class="side-label bottom-label">长边</div>
+                                        <div class="side-label left-label">短边</div>
+                                        <div class="side-label right-label">短边</div>
+                                        <div class="angle-label angle-tl">90°</div>
+                                        <div class="angle-label angle-tr">90°</div>
+                                        <div class="angle-label angle-bl">90°</div>
+                                        <div class="angle-label angle-br">90°</div>
+                                    </div>
+                                </div>
+                                <p>长方形对边相等但邻边不等</p>
+                            </div>
+                        </div>
+                    `;
+                } else if (error.shape === 'square' && error.feature === 'all-equal') {
+                    explanationHTML += `
+                        <p><strong>解释：</strong>正方形的四条边长度都相等。</p>
+                        <div class="diagram-container">
+                            <div class="diagram">
+                                <div class="diagram-title">正方形示意图</div>
+                                <div class="diagram-img">
+                                    <div class="square-diagram">
+                                        <div class="side-label top-label">边</div>
+                                        <div class="side-label bottom-label">边</div>
+                                        <div class="side-label left-label">边</div>
+                                        <div class="side-label right-label">边</div>
+                                        <div class="angle-label angle-tl">90°</div>
+                                        <div class="angle-label angle-tr">90°</div>
+                                        <div class="angle-label angle-bl">90°</div>
+                                        <div class="angle-label angle-br">90°</div>
+                                    </div>
+                                </div>
+                                <p>正方形四条边都相等</p>
+                            </div>
+                        </div>
+                    `;
+                } else if (error.feature === 'opposite-equal') {
+                    explanationHTML += `
+                        <p><strong>解释：</strong>${shapeName}的对边长度相等。</p>
+                        <div class="diagram-container">
+                            <div class="diagram">
+                                <div class="diagram-title">${shapeName}对边相等示意图</div>
+                                <div class="diagram-img">
+                                    <div class="${error.shape}-diagram">
+                                        ${error.shape === 'rectangle' ? 
+                                            '<div class="side-label top-label">上边 = 下边</div>' +
+                                            '<div class="side-label left-label">左边 = 右边</div>' :
+                                            '<div class="side-label top-label">四边相等</div>'
+                                        }
+                                        <div class="angle-label angle-tl">90°</div>
+                                        <div class="angle-label angle-tr">90°</div>
+                                        <div class="angle-label angle-bl">90°</div>
+                                        <div class="angle-label angle-br">90°</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                } else if (error.feature === 'opposite-parallel') {
+                    explanationHTML += `
+                        <p><strong>解释：</strong>${shapeName}的对边互相平行。</p>
+                        <div class="diagram-container">
+                            <div class="diagram">
+                                <div class="diagram-title">${shapeName}对边平行示意图</div>
+                                <div class="diagram-img">
+                                    <div class="${error.shape}-diagram">
+                                        <div class="arrow horizontal-arrow right-arrow"></div>
+                                        <div class="arrow horizontal-arrow left-arrow"></div>
+                                        <div class="arrow vertical-arrow down-arrow"></div>
+                                        <div class="arrow vertical-arrow up-arrow"></div>
+                                    </div>
+                                </div>
+                                <p>上下边平行，左右边平行</p>
+                            </div>
+                        </div>
+                    `;
+                } else if (error.feature === 'all-angle-equal') {
+                    explanationHTML += `
+                        <p><strong>解释：</strong>${shapeName}的四个角都是直角（90度），所以四角相等。</p>
+                        <div class="diagram-container">
+                            <div class="diagram">
+                                <div class="diagram-title">${shapeName}四角相等示意图</div>
+                                <div class="diagram-img">
+                                    <div class="${error.shape}-diagram">
+                                        <div class="angle-label angle-tl">90°</div>
+                                        <div class="angle-label angle-tr">90°</div>
+                                        <div class="angle-label angle-bl">90°</div>
+                                        <div class="angle-label angle-br">90°</div>
+                                    </div>
+                                </div>
+                                <p>四个角都是直角</p>
+                            </div>
+                        </div>
+                    `;
+                } else if (error.feature === 'opposite-angle-equal') {
+                    explanationHTML += `
+                        <p><strong>解释：</strong>${shapeName}的对角大小相等（都是直角）。</p>
+                        <div class="diagram-container">
+                            <div class="diagram">
+                                <div class="diagram-title">${shapeName}对角相等示意图</div>
+                                <div class="diagram-img">
+                                    <div class="${error.shape}-diagram">
+                                        <div class="angle-label angle-tl">90°</div>
+                                        <div class="angle-label angle-br">90°</div>
+                                    </div>
+                                </div>
+                                <p>对角都是直角</p>
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                explanationHTML += '</div>';
+            });
+            
+            explanation.innerHTML = explanationHTML;
+            explanation.style.display = 'block';
+        }
+        
+        // 重置表格
+        document.getElementById('reset-btn').addEventListener('click', resetTable);
+        
+        function resetTable() {
+            document.querySelectorAll('.feature-cell').forEach(cell => {
+                cell.innerHTML = '<div class="question-mark">?</div>';
+                cell.style.backgroundColor = '';
+                cell.classList.remove('selected');
+            });
+            
+            userAnswers = {
+                rectangle: {},
+                square: {}
+            };
+            
+            document.getElementById('feedback').style.display = 'none';
+            document.getElementById('explanation').style.display = 'none';
+        }
+        
+        // 创建彩带动画
+        function createConfetti() {
+            const colors = ['#f44336', '#e91e63', '#9c27b0', '#673ab7', '#3f51b5', '#2196f3', '#03a9f4', '#00bcd4', '#009688', '#4caf50', '#8bc34a', '#cddc39', '#ffeb3b', '#ffc107', '#ff9800', '#ff5722'];
+            
+            for (let i = 0; i < 150; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.left = Math.random() * 100 + 'vw';
+                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.animation = `confetti-fall ${Math.random() * 3 + 2}s linear forwards`;
+                document.body.appendChild(confetti);
+                
+                // 动画结束后移除元素
+                setTimeout(() => {
+                    confetti.remove();
+                }, 5000);
+            }
+        }
+    </script>
+</body>
+</html>
